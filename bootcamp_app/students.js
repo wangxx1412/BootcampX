@@ -7,20 +7,21 @@ const pool = new Pool({
   database: "bootcampx"
 });
 
-let args = process.argv.slice(2, 4);
+const cohortName = process.argv[2];
+const limit = process.argv[3] || 5;
 
-let cohort_mon = args[0];
-let limit = args[1];
+const values = [`%${cohortName}%`, limit];
+
+const queryString = `
+  SELECT students.id as student_id, students.name as name, cohorts.name as cohort
+  FROM students
+  JOIN cohorts ON cohorts.id = cohort_id
+  WHERE cohorts.name LIKE $1
+  LIMIT $2;
+  `;
 
 pool
-  .query(
-    `
-SELECT x.id, x.name, x.cohort_id,y.name as cohort_name
-FROM students x JOIN cohorts y ON x.cohort_id = y.id
-WHERE y.name LIKE '%${cohort_mon}%'
-LIMIT ${limit};
-`
-  )
+  .query(queryString, values)
   .then(res => {
     res.rows.forEach(user => {
       console.log(
